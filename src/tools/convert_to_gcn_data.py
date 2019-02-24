@@ -11,7 +11,6 @@ from prepare_list import prepare_graph
 # https://github.com/tensorflow/models/blob/master/research/slim/datasets/imagenet_lsvrc_2015_synsets.txt
 data_dir = '../../data/'
 
-
 def convert_to_gcn_data(model_path, layer_name, offset, wv_file):
     save_dir = os.path.join(data_dir, '%s_%s' % (args.wv, args.fc))
     if not os.path.exists(save_dir):
@@ -26,8 +25,8 @@ def convert_to_gcn_data(model_path, layer_name, offset, wv_file):
 
 
 def convert_input(wv_file, save_dir):
-    with open(wv_file) as fp:
-        feats = pkl.load(fp)
+    with open(wv_file,'rb') as fp:
+        feats = pkl.load(fp,encoding='latin1')
     feats = feats.tolist()
     sparse_feats = sparse.csr_matrix(feats)
     dense_feats = np.array(feats)
@@ -46,7 +45,7 @@ def convert_input(wv_file, save_dir):
 def convert_label(model_path, layer_name, save_dir, offset):  # get output's label and mask
     '''save visual classifier'''
     corresp_file = os.path.join(data_dir, 'list/corresp-all.json')  # 2-hops, 3-hops are also okay.
-    with open(corresp_file) as fp:
+    with open(corresp_file,'rb') as fp:
         corresp_list = json.load(fp)
 
     def get_variables_in_checkpoint_file(file_name):

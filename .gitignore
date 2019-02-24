@@ -10,3 +10,4 @@ images/
 feats/
 output/
 pretrain_weights/*
+exp/
