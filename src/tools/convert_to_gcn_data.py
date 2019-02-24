@@ -45,7 +45,7 @@ def convert_input(wv_file, save_dir):
 def convert_label(model_path, layer_name, save_dir, offset):  # get output's label and mask
     '''save visual classifier'''
     corresp_file = os.path.join(data_dir, 'list/corresp-all.json')  # 2-hops, 3-hops are also okay.
-    with open(corresp_file,'rb') as fp:
+    with open(corresp_file,'r') as fp:
         corresp_list = json.load(fp)
 
     def get_variables_in_checkpoint_file(file_name):
