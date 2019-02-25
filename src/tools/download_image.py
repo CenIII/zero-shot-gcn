@@ -1,55 +1,137 @@
 import argparse
 import os
 import threading
-import urllib
+# import urllib
 import glob
 
+import shutil
+import tempfile
+import urllib.request
+import pickle
 import cv2
 import numpy as np
+import tqdm
+
+import io
+from PIL import Image
+import warnings
+from multiprocessing import Process
+
+import signal
+import sys
+def signal_handler(sig, frame):
+        print('You pressed Ctrl+C!')
+        for p in procList:
+            p.terminate()
+        sys.exit(0)
+signal.signal(signal.SIGINT, signal_handler)
 
 data_dir = '../data/'
+warnings.filterwarnings("ignore", "Possibly corrupt EXIF data", UserWarning)
+warnings.filterwarnings("ignore", "Corrupt EXIF data", UserWarning)
+procList = []
 
 
 def download(vid_file):
     with open(vid_file) as fp:
         vid_list = [line.strip() for line in fp]
-    url_list = 'http://www.image-net.org/download/synset?wnid='
-    url_key = '&username=%s&accesskey=%s&release=latest&src=stanford' % (args.user, args.key)
 
-    testfile = urllib.URLopener()
-    for i in range(len(vid_list)):
-        wnid = vid_list[i]
-        url_acc = url_list + wnid + url_key
+    # url_list = 'http://www.image-net.org/download/synset?wnid='
+    # url_key = '&username=%s&accesskey=%s&release=latest&src=stanford' % (args.user, args.key)
 
-        save_dir = os.path.join(scratch_dir, wnid)
-        lockname = save_dir + '.lock'
-        if os.path.exists(save_dir):
-            continue
-        if os.path.exists(lockname):
-            continue
-        try:
-            os.makedirs(lockname)
-        except:
-            continue
-        tar_file = os.path.join(scratch_dir, wnid + '.tar')
-        try:
-            testfile.retrieve(url_acc, tar_file)
-            print('Downloading %s' % wnid)
-        except:
-            print('!!! Error when downloading', wnid)
-            continue
+    # testfile = urllib.URLopener()
 
-        if not os.path.exists(os.path.join(scratch_dir, wnid)):
-            os.makedirs(os.path.join(scratch_dir, wnid))
-        cmd = 'tar -xf ' + tar_file + ' --directory ' + save_dir
+    # todo: read url lists
+    # fall11_file = data_dir+'list/fall11_urls.txt'
+    # url_list = {} # {n00145923:['http://...','...']}
+    # with open(fall11_file,'r',errors='replace') as f:
+    #     lines = f.readlines()
+    #     print("done reading.")
+    #     print("num of lines: "+str(len(lines)))
+    #     qdar = tqdm.tqdm(lines,total=len(lines),ascii=True)
+    #     for line in qdar:
+    #         # print(line)
+    #         line_sp = line.split('\t')
+    #         if len(line_sp)>2:
+    #             continue
+    #         name, url = line_sp
+    #         class_name, image_name = name.split('_')
+    #         ent = url_list.setdefault(class_name,[])
+    #         ent.append(url[:-1])
+    # with open(data_dir+'list/url_list','wb') as f:
+    #     pickle.dump(url_list,f)
+
+    # print("done.")
+    with open(data_dir+'list/url_list','rb') as f:
+        url_list = pickle.load(f)
+
+    def get_wnid_url_addr(wnid):
+        # todo: return matching url list for the wnid
+        if wnid in url_list:
+            return url_list[wnid]
+        else:
+            print("no such class.")
+            return None
+        
+    
+    def download_pack_save(wnid_url_list,save_dir,index,valid_ind,pid,qdar):
+        image_list = []
+        outer_ind = 0
+        inner_ind = 0
+        length = len(wnid_url_list)
+        os.makedirs(save_dir+'.proc',exist_ok=True)
+        for url in wnid_url_list:
+            index += 1
+            outer_ind += 1
+            try:
+                img = urllib.request.urlopen(url, timeout=4).read()
+                if img[:4] == b'\xff\xd8\xff\xe0': # is image
+                    valid_ind += 1
+                    inner_ind += 1
+                    target = os.path.join(save_dir,str(inner_ind)+'.JPG')
+                    image = Image.open(io.BytesIO(img))
+                    image.save(target)
+            except:
+                # print("invalid url.")
+                continue
+            qdar.set_postfix(progress=str(inner_ind)+'/'+str(outer_ind)+'/'+str(length), valid2all=str(valid_ind)+'/'+str(index), pid=pid)
+        cmd = 'rm -r %s' % (save_dir+'.proc')
         os.system(cmd)
-        cmd = 'rm ' + os.path.join(tar_file)
-        os.system(cmd)
-        cmd = 'rm -r %s' % lockname
-        os.system(cmd)
+        # todo: save image_list to tar file. 
+    
 
-        if i % 10 == 0:
-            print('%d / %d' % (i, len(vid_list)))
+
+    numProc = 16
+
+    def sub_process(sub_vid_list,pid):
+        index = 0
+        valid_ind = 0
+
+        qdar = tqdm.tqdm(range(len(sub_vid_list)),total=len(sub_vid_list),ascii=True,position=pid)
+        
+        for i in qdar:
+
+            wnid = sub_vid_list[i]
+            
+            save_dir = os.path.join(scratch_dir, wnid) # ../images/wnid/
+
+            if os.path.exists(save_dir):
+                continue
+            os.makedirs(save_dir)
+            wnid_url_list = get_wnid_url_addr(wnid)
+            download_pack_save(wnid_url_list,save_dir,index,valid_ind,pid,qdar)
+
+    part0 = int(len(vid_list)/2)
+    part1 = int(len(vid_list))
+    numIters = int(part0/numProc) + 1
+    
+    for pid in range(numProc):
+        p = Process(target=sub_process, args=(vid_list[int(pid*numIters):min(int((pid+1)*numIters),part0)],pid))
+        p.start()
+        procList.append(p)
+    
+    for pid in range(numProc):
+        procList[pid].join()
 
 
 def make_image_list(list_file, image_dir, name, offset=1000):

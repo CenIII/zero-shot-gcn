@@ -6,7 +6,7 @@
 ind.NELL.*
 data/word_embedding_model/*
 data/list/img-*.txt
-daat/list/url_list
+data/list/url_list
 images/
 feats/
 output/
