@@ -98,7 +98,7 @@ def download(vid_file):
         cmd = 'rm -r %s' % (save_dir+'.proc')
         os.system(cmd)
         # todo: save image_list to tar file. 
-    
+        return index,valid_ind
 
 
     numProc = 16
@@ -119,7 +119,7 @@ def download(vid_file):
                 continue
             os.makedirs(save_dir)
             wnid_url_list = get_wnid_url_addr(wnid)
-            download_pack_save(wnid_url_list,save_dir,index,valid_ind,pid,qdar)
+            index,valid_ind = download_pack_save(wnid_url_list,save_dir,index,valid_ind,pid,qdar)
 
     part0 = int(len(vid_list)/2)
     part1 = int(len(vid_list))
