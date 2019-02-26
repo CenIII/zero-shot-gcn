@@ -24,6 +24,9 @@ def extract_feature(image_list, pool5, image_holder, preprocess, model_path, ima
     net_time, cnt = 0, 0
     qdar = tqdm.tqdm(enumerate(image_list),total=len(image_list),ascii=True)
     
+    fn_list = []
+    in_list = []
+    lcn_list = []
     for i, index in qdar:
         feat_name = os.path.join(feat_dir, index.split('.')[0] + '.npz')
         image_name = os.path.join(image_dir, index)
@@ -36,28 +39,48 @@ def extract_feature(image_list, pool5, image_holder, preprocess, model_path, ima
             os.makedirs(lockname)
         except:
             continue
-        t = time.time()
-        cnt += 1
-        image = preprocess(image_name)
-        if image is None:
-            print('no image')
-            continue
-        feat = run_feat(sess, pool5, image_holder, image)
-        if not os.path.exists(os.path.dirname(feat_name)):
-            try:
-                os.makedirs(os.path.dirname(feat_name))
-                print('## Make Directory: %s' % feat_name)
-            except:
-                pass
-        np.savez_compressed(feat_name, feat=feat)
-        net_time += time.time() - t
+        fn_list.append(feat_name)
+        in_list.append(image_name)
+        lcn_list.append(lockname)
+
+        if i % 10 == 9:
+
+            t = time.time()
+            cnt += 1
+            image = np.zeros([10,224,224,3])
+            im_ind = 0
+            for image_name in in_list:
+                image[im_ind] = preprocess(image_name)[0]
+                im_ind += 1
+            if image is None:
+                print('no image')
+                continue
+            feat = run_feat(sess, pool5, image_holder, image)
+
+            fn_ind = 0
+            for feat_name in fn_list:
+                if not os.path.exists(os.path.dirname(feat_name)):
+                    try:
+                        os.makedirs(os.path.dirname(feat_name))
+                        print('## Make Directory: %s' % feat_name)
+                    except:
+                        pass
+                np.savez_compressed(feat_name, feat=feat[fn_ind])
+                fn_ind += 1
+            net_time += time.time() - t
+            for lockname in lcn_list:
+                cmd = 'rm -r %s' % lockname
+                os.system(cmd)
+            fn_list = []
+            in_list = []
+            lcn_list = []
+
         if i % 1000 == 0:
             # print('extracting feature [%d / %d] %s (%f sec)' % (i, len(image_list), feat_name, net_time / cnt * 1000),
                   # feat.shape)
             net_time = 0
             cnt = 0
-        cmd = 'rm -r %s' % lockname
-        os.system(cmd)
+        
 
 
 def init(model_path, sess):
