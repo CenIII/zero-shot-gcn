@@ -12,7 +12,7 @@ from tensorflow.contrib.slim.python.slim.nets.inception_v1 import inception_v1_b
 from tensorflow.contrib.layers.python.layers import layers as layers_lib
 from tensorflow.python.ops import variable_scope
 import time
-
+import tqdm 
 
 def extract_feature(image_list, pool5, image_holder, preprocess, model_path, image_dir, feat_dir):
     tfconfig = tf.ConfigProto(allow_soft_placement=True)
@@ -22,7 +22,9 @@ def extract_feature(image_list, pool5, image_holder, preprocess, model_path, ima
     init(model_path, sess)
     print('Done Init! ')
     net_time, cnt = 0, 0
-    for i, index in enumerate(image_list):
+    qdar = tqdm.tqdm(enumerate(image_list),total=len(image_list),ascii=True)
+    
+    for i, index in qdar:
         feat_name = os.path.join(feat_dir, index.split('.')[0] + '.npz')
         image_name = os.path.join(image_dir, index)
         lockname = feat_name + '.lock'
@@ -50,8 +52,8 @@ def extract_feature(image_list, pool5, image_holder, preprocess, model_path, ima
         np.savez_compressed(feat_name, feat=feat)
         net_time += time.time() - t
         if i % 1000 == 0:
-            print('extracting feature [%d / %d] %s (%f sec)' % (i, len(image_list), feat_name, net_time / cnt * 1000),
-                  feat.shape)
+            # print('extracting feature [%d / %d] %s (%f sec)' % (i, len(image_list), feat_name, net_time / cnt * 1000),
+                  # feat.shape)
             net_time = 0
             cnt = 0
         cmd = 'rm -r %s' % lockname
