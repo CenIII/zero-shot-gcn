@@ -101,7 +101,7 @@ def download(vid_file):
         return index,valid_ind
 
 
-    numProc = 16
+    numProc = 8
 
     def sub_process(sub_vid_list,pid):
         index = 0
@@ -121,12 +121,10 @@ def download(vid_file):
             wnid_url_list = get_wnid_url_addr(wnid)
             index,valid_ind = download_pack_save(wnid_url_list,save_dir,index,valid_ind,pid,qdar)
 
-    part0 = int(len(vid_list)/2)
-    part1 = int(len(vid_list))
-    numIters = int(part0/numProc) + 1
+    numIters = int(len(vid_list)/numProc) + 1
     
     for pid in range(numProc):
-        p = Process(target=sub_process, args=(vid_list[int(pid*numIters):min(int((pid+1)*numIters),part0)],pid))
+        p = Process(target=sub_process, args=(vid_list[int(pid*numIters):int((pid+1)*numIters)],pid))
         p.start()
         procList.append(p)
     
@@ -141,7 +139,7 @@ def make_image_list(list_file, image_dir, name, offset=1000):
     save_file = os.path.join(data_dir, 'list', 'img-%s.txt' % name)
     wr_fp = open(save_file, 'w')
     for i, wnid in enumerate(wnid_list):
-        img_list = glob.glob(os.path.join(image_dir, wnid, '*.JPEG'))
+        img_list = glob.glob(os.path.join(image_dir, wnid, '*.JPG'))
         for path in img_list:
             index = os.path.join(wnid, os.path.basename(path))
             l = i + offset
@@ -157,7 +155,7 @@ def rm_empty(vid_file):
     cnt = 0
     for i in range(len(vid_list)):
         save_dir = os.path.join(scratch_dir, vid_list[i])
-        jpg_list = glob.glob(save_dir + '/*.JPEG')
+        jpg_list = glob.glob(save_dir + '/*.JPG')
         if len(jpg_list) < 10:
             print(vid_list[i])
             cmd = 'rm -r %s ' % save_dir
@@ -176,7 +174,7 @@ def down_sample(list_file, image_dir, size=256):
         img = downsample_image(img_file, size)
         if img is None:
             continue
-        save_file = os.path.join(os.path.dirname(img_file), os.path.basename(img_file).split('.')[0] + 'copy') + '.JPEG'
+        save_file = os.path.join(os.path.dirname(img_file), os.path.basename(img_file).split('.')[0] + 'copy') + '.JPG'
         cv2.imwrite(save_file, img)
         cmd = 'mv %s %s' % (save_file, img_file)
         os.system(cmd)
