@@ -14,7 +14,7 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
         classids = json.load(fp)
 
     with open(word2vec_file, 'rb') as fp:
-        word2vec_feat = pkl.load(fp)
+        word2vec_feat = pkl.load(fp,encoding='latin1')
 
     testlist = []
     testlabels = []
@@ -23,7 +23,7 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
             fname, lbl = line.split()
             assert int(lbl) >= 1000
             # feat_name = os.path.join(feat_folder, fname.replace('.JPEG', '.mat'))
-            feat_name = os.path.join(feat_folder, fname.replace('.JPEG', '.npz'))
+            feat_name = os.path.join(feat_folder, fname.replace('.JPG', '.npz'))
             if not os.path.exists(feat_name):
                 print('not feature', feat_name)
                 continue
