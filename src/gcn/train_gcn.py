@@ -54,7 +54,7 @@ else:
     raise ValueError('Invalid argument for model: ' + str(FLAGS.model))
 
 print(features.shape)
-np.random.shuffle(features,axis=0)
+np.random.shuffle(features)
 
 # Define placeholders
 placeholders = {
@@ -91,7 +91,7 @@ else:
 # Train model
 now_lr = FLAGS.learning_rate
 
-grads_wrt_input_tensor = tf.gradients(model.loss,placeholders.features)
+grads_wrt_input_tensor = tf.gradients(model.loss,placeholders['features'])
 
 for epoch in range(FLAGS.epochs):
     t = time.time()
@@ -103,6 +103,9 @@ for epoch in range(FLAGS.epochs):
     outs = sess.run([model.opt_op, model.loss, model.accuracy, model.optimizer._lr, grads_wrt_input_tensor], feed_dict=feed_dict)
 
     # look at outs[4] now. 
+    inp_grad = outs[4][0]
+    # update features
+    features -= inp_grad
     
     if epoch % 20 == 0:
         print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
