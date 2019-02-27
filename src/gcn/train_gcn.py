@@ -44,7 +44,10 @@ adj, features, y_train, y_val, y_trainval, train_mask, val_mask, trainval_mask =
         load_data_vis_multi(FLAGS.dataset, use_trainval, feat_suffix)
 
 # Some preprocessing
-features, div_mat = preprocess_features_dense2(features)
+# features, div_mat = preprocess_features_dense2(features)
+train_mask_rev = True^train_mask
+features = np.random.normal(0, 0.1, y_train.shape)
+features = features*train_mask_rev + y_train*train_mask
 
 if FLAGS.model == 'dense':
     support = [preprocess_adj(adj)]
@@ -54,7 +57,6 @@ else:
     raise ValueError('Invalid argument for model: ' + str(FLAGS.model))
 
 print(features.shape)
-np.random.shuffle(features)
 
 # Define placeholders
 placeholders = {
@@ -103,11 +105,11 @@ for epoch in range(FLAGS.epochs):
     outs = sess.run([model.opt_op, model.loss, model.accuracy, model.optimizer._lr, grads_wrt_input_tensor], feed_dict=feed_dict)
 
     # look at outs[4] now. 
-    inp_grad = outs[4][0]
-    # update features
-    features -= inp_grad
+    inp_grad = outs[4][0]*train_mask_rev
+    # update features only w.r.t unknown nodes
+    features -= 0.001*inp_grad
     
-    if epoch % 20 == 0:
+    if epoch % 1 == 0:
         print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
               "train_loss_nol2=", "{:.5f}".format(outs[2]),
               "time=", "{:.5f}".format(time.time() - t),
@@ -120,12 +122,22 @@ for epoch in range(FLAGS.epochs):
 
     if flag == 1 or epoch % 500 == 0:
         outs = sess.run(model.outputs, feed_dict=feed_dict)
-        filename = savepath + '/feat_' + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
+
+        filename = savepath + '/feat_out_' + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
         print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
 
         filehandler = open(filename, 'wb')
         pkl.dump(outs, filehandler)
         filehandler.close()
+
+        filename = savepath + '/feat_inp_' + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
+        print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
+
+        filehandler = open(filename, 'wb')
+        pkl.dump(features, filehandler)
+        filehandler.close()
+
+
 
 print("Optimization Finished!")
 
