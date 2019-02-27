@@ -40,14 +40,18 @@ use_trainval = True
 feat_suffix = 'allx_dense'
 
 # Load data
-adj, features, y_train, y_val, y_trainval, train_mask, val_mask, trainval_mask = \
+adj, word_embs, y_train, y_val, y_trainval, train_mask, val_mask, trainval_mask = \
         load_data_vis_multi(FLAGS.dataset, use_trainval, feat_suffix)
 
 # Some preprocessing
 # features, div_mat = preprocess_features_dense2(features)
 train_mask_rev = True^train_mask
-features = np.random.normal(0, 0.1, y_train.shape)
-features = features*train_mask_rev + y_train*train_mask
+classifiers = np.random.normal(0, 0.1, y_train.shape)
+classifiers = classifiers*train_mask_rev + y_train*train_mask
+
+features = np.concatenate((word_embs,classifiers),axis=1)
+we_dim = word_embs.shape[1]
+cl_dim = classifiers.shape[1]
 
 if FLAGS.model == 'dense':
     support = [preprocess_adj(adj)]
@@ -95,6 +99,8 @@ now_lr = FLAGS.learning_rate
 
 grads_wrt_input_tensor = tf.gradients(model.loss,placeholders['features'])
 
+train_mask_rev = np.concatenate((train_mask_rev,train_mask_rev[:,:300]),axis=1)
+
 for epoch in range(FLAGS.epochs):
     t = time.time()
     # Construct feed dictionary
@@ -107,7 +113,7 @@ for epoch in range(FLAGS.epochs):
     # look at outs[4] now. 
     inp_grad = outs[4][0]*train_mask_rev
     # update features only w.r.t unknown nodes
-    features -= 0.001*inp_grad
+    features[:,we_dim:] -= 0.001*inp_grad[:,we_dim:]
     
     if epoch % 1 == 0:
         print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
