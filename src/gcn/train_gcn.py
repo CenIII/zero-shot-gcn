@@ -140,7 +140,8 @@ for epoch in range(FLAGS.epochs):
         print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
 
         filehandler = open(filename, 'wb')
-        pkl.dump(features, filehandler)
+        assert(features[:,we_dim:].shape[1]==2048)
+        pkl.dump(features[:,we_dim:], filehandler)
         filehandler.close()
 
 
