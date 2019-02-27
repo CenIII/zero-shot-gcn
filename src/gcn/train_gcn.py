@@ -115,7 +115,7 @@ for epoch in range(FLAGS.epochs):
     # update features only w.r.t unknown nodes
     features[:,we_dim:] -= 0.001*inp_grad[:,we_dim:]
     
-    if epoch % 1 == 0:
+    if epoch % 20 == 0:
         print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
               "train_loss_nol2=", "{:.5f}".format(outs[2]),
               "time=", "{:.5f}".format(time.time() - t),
