@@ -23,7 +23,7 @@ flags.DEFINE_string('dataset', '../../data/glove_res50/', 'Dataset string.')
 flags.DEFINE_string('model', 'dense', 'Model string.')
 flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate.')
 flags.DEFINE_string('save_path', '../output/', 'save dir')
-flags.DEFINE_integer('epochs', 350, 'Number of epochs to train.')
+flags.DEFINE_integer('epochs', 320, 'Number of epochs to train.')
 flags.DEFINE_integer('hidden1', 2048, 'Number of units in hidden layer 1.')
 flags.DEFINE_integer('hidden2', 2048, 'Number of units in hidden layer 1.')
 flags.DEFINE_integer('hidden3', 1024, 'Number of units in hidden layer 1.')
@@ -93,49 +93,63 @@ else:
 # Train model
 now_lr = FLAGS.learning_rate
 
-grads_wrt_input_tensor = tf.gradients(model.loss,placeholders['features'])
+# grads_wrt_input_tensor = tf.gradients(model.loss,placeholders['features'])
+allone_mask = np.ones_like(train_mask,dtype=bool)
 
-for epoch in range(FLAGS.epochs):
-    t = time.time()
-    # Construct feed dictionary
-    feed_dict = construct_feed_dict(features, support, y_train, train_mask, placeholders)
-    feed_dict.update({placeholders['learning_rate']: now_lr})
-
-    # Training step
-    outs = sess.run([model.opt_op, model.loss, model.accuracy, model.optimizer._lr, grads_wrt_input_tensor], feed_dict=feed_dict)
-
-    # look at outs[4] now. 
-    inp_grad = outs[4][0]*train_mask_rev
-    # update features only w.r.t unknown nodes
-    features -= 0.001*inp_grad
-    
-    if epoch % 1 == 0:
-        print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
-              "train_loss_nol2=", "{:.5f}".format(outs[2]),
-              "time=", "{:.5f}".format(time.time() - t),
-              "lr=", "{:.5f}".format(float(outs[3])))
-
-    flag = 0
-    for k in range(len(save_epochs)):
-        if save_epochs[k] == epoch:
-            flag = 1
-
-    if flag == 1 or epoch % 500 == 0:
+for outer_iter in range(5):
+    # E step
+    for i in range(20):
+        feed_dict = construct_feed_dict(features, support, y_train, train_mask, placeholders)
         outs = sess.run(model.outputs, feed_dict=feed_dict)
+        # first calculate L2-norm of errors w.r.t unknown part. 
+        error = np.sum(((features-outs)*train_mask_rev)**2)
+        print('error: '+str(error))
+        # change features according to outs
+        features = outs*train_mask_rev + features*train_mask
 
-        filename = savepath + '/feat_out_' + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
-        print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
+    # M step
+    for epoch in range(FLAGS.epochs):
+        t = time.time()
+        # Construct feed dictionary
+        # feed_dict = construct_feed_dict(features, support, y_train, train_mask, placeholders)
+        feed_dict = construct_feed_dict(features, support, features, allone_mask, placeholders)
+        feed_dict.update({placeholders['learning_rate']: now_lr})
 
-        filehandler = open(filename, 'wb')
-        pkl.dump(outs, filehandler)
-        filehandler.close()
+        # Training step
+        outs = sess.run([model.opt_op, model.loss, model.accuracy, model.optimizer._lr], feed_dict=feed_dict)
 
-        filename = savepath + '/feat_inp_' + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
-        print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
+        # look at outs[4] now. 
+        # inp_grad = outs[4][0]*train_mask_rev
+        # # update features only w.r.t unknown nodes
+        # features -= 0.001*inp_grad
+        
+        if epoch % 1 == 0:
+            print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
+                  "train_loss_nol2=", "{:.5f}".format(outs[2]),
+                  "time=", "{:.5f}".format(time.time() - t),
+                  "lr=", "{:.5f}".format(float(outs[3])))
 
-        filehandler = open(filename, 'wb')
-        pkl.dump(features, filehandler)
-        filehandler.close()
+        flag = 0
+        for k in range(len(save_epochs)):
+            if save_epochs[k] == epoch:
+                flag = 1
+
+        if flag == 1 or epoch % 500 == 300:
+            outs = sess.run(model.outputs, feed_dict=feed_dict)
+
+            filename = savepath + '/feat_out_' + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
+            print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
+
+            filehandler = open(filename, 'wb')
+            pkl.dump(outs, filehandler)
+            filehandler.close()
+
+            filename = savepath + '/feat_inp_' + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
+            print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
+
+            filehandler = open(filename, 'wb')
+            pkl.dump(features, filehandler)
+            filehandler.close()
 
 
 
