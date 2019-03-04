@@ -99,8 +99,8 @@ allone_mask = np.ones_like(train_mask,dtype=bool)
 
 for outer_iter in range(5):
     # E step
-    for i in range(20):
-        feed_dict = construct_feed_dict(features, support, y_train, train_mask, placeholders)
+    for i in range(10):
+        feed_dict = construct_feed_dict(features, support, y_train, train_mask, train_mask, placeholders)
         outs = sess.run(model.outputs, feed_dict=feed_dict)
         # first calculate L2-norm of errors w.r.t unknown part. 
         error = np.sum(((features-outs)*train_mask_rev)**2)
