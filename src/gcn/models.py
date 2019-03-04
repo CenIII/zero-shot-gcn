@@ -192,7 +192,7 @@ class GCN_dense_mse(Model_dense):
 
     def _accuracy(self):
         self.accuracy = mask_mse_loss(self.outputs, tf.nn.l2_normalize(self.placeholders['labels'], dim=1),
-                                      self.placeholders['labels_mask'])
+                                      self.placeholders['known_mask'])
 
     def lrelu(x, leak=0.2, name="lrelu"):
         return tf.maximum(x, leak * x)

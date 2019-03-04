@@ -64,6 +64,7 @@ placeholders = {
     'features': tf.placeholder(tf.float32, shape=(features.shape[0], features.shape[1])),  # sparse_placeholder
     'labels': tf.placeholder(tf.float32, shape=(None, y_train.shape[1])),
     'labels_mask': tf.placeholder(tf.int32),
+    'known_mask': tf.placeholder(tf.int32),
     'dropout': tf.placeholder_with_default(0., shape=()),
     'num_features_nonzero': tf.placeholder(tf.int32),  # helper variable for sparse dropout
     'learning_rate': tf.placeholder(tf.float32, shape=())
@@ -112,7 +113,7 @@ for outer_iter in range(5):
         t = time.time()
         # Construct feed dictionary
         # feed_dict = construct_feed_dict(features, support, y_train, train_mask, placeholders)
-        feed_dict = construct_feed_dict(features, support, features, allone_mask, placeholders)
+        feed_dict = construct_feed_dict(features, support, features, allone_mask, train_mask, placeholders)
         feed_dict.update({placeholders['learning_rate']: now_lr})
 
         # Training step
