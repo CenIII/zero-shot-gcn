@@ -107,6 +107,8 @@ for outer_iter in range(5):
         print('error: '+str(error))
         # change features according to outs
         features = outs*train_mask_rev + features*train_mask
+        if error<1000:
+            break
 
     # M step
     for epoch in range(FLAGS.epochs):
@@ -135,22 +137,23 @@ for outer_iter in range(5):
             if save_epochs[k] == epoch:
                 flag = 1
 
-        if flag == 1 or epoch % 500 == 300:
+        if flag == 1 or outs[1]<140000:
             outs = sess.run(model.outputs, feed_dict=feed_dict)
 
-            filename = savepath + '/feat_out_' + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
+            filename = savepath + '/feat_out' # + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
             print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
 
             filehandler = open(filename, 'wb')
             pkl.dump(outs, filehandler)
             filehandler.close()
 
-            filename = savepath + '/feat_inp_' + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
+            filename = savepath + '/feat_inp'# + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
             print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
 
             filehandler = open(filename, 'wb')
             pkl.dump(features, filehandler)
             filehandler.close()
+            break
 
 
 
