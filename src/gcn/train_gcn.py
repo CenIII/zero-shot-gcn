@@ -113,7 +113,7 @@ for outer_iter in range(5):
         t = time.time()
         # Construct feed dictionary
         # feed_dict = construct_feed_dict(features, support, y_train, train_mask, placeholders)
-        feed_dict = construct_feed_dict(features, support, features, allone_mask, train_mask, placeholders)
+        feed_dict = construct_feed_dict(features, support, features, train_mask, train_mask, placeholders)
         feed_dict.update({placeholders['learning_rate']: now_lr})
 
         # Training step
@@ -124,7 +124,7 @@ for outer_iter in range(5):
         # # update features only w.r.t unknown nodes
         # features -= 0.001*inp_grad
         
-        if epoch % 1 == 0:
+        if epoch % 20 == 0:
             print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
                   "train_loss_nol2=", "{:.5f}".format(outs[2]),
                   "time=", "{:.5f}".format(time.time() - t),
