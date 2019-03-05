@@ -78,6 +78,7 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 	labels_train, word2vec_train = [], []
 	ind_remap = []
 	fc_now = []
+	hops_dict = {}
 	for j in range(len(classids)):
 		tfc = fc_layers_pred[j]
 		if has_train:
