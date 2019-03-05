@@ -157,8 +157,12 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 			# map to labels
 			for ind in gind_2hpnbs:
 				# print('better be True: '+str(classids[ind][0]>=0 and classids[ind][1]==1))
-				if classids[ind][0]>=0 and classids[ind][1]==1:
-					guess_lbls.append(classids[ind][0])
+				if not has_train:
+					if classids[ind][0]>=0 and classids[ind][1]==1:
+						guess_lbls.append(classids[ind][0])
+				else:
+					if classids[ind][0]>=0:
+						guess_lbls.append(classids[ind][0])
 			if len(guess_lbls)>25:
 				break
 
