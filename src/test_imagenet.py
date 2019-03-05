@@ -97,6 +97,11 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 			labels_train.append(classids[j][0])
 			word2vec_train.append(twv)
 			ind_remap.append(j)
+			gind_2hpnbs = get_2hop_neighbors(gind,adj)
+			gind_2hpnbs = list(set(gind_2hpnbs))
+			gind_2hpnbs.remove(gind)
+			random.shuffle(gind_2hpnbs)
+			hops_dict[j] = gind_2hpnbs
 
 			feat_len = len(tfc)
 			tfc = tfc[feat_len - fc_dim: feat_len]
@@ -141,10 +146,11 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 			gind = ind_remap[ids[i]]  # id out of 32297
 
 			# get neighbor 2-hops inds
-			gind_2hpnbs = get_2hop_neighbors(gind,adj)
-			gind_2hpnbs = list(set(gind_2hpnbs))
-			gind_2hpnbs.remove(gind)
-			random.shuffle(gind_2hpnbs)
+			# gind_2hpnbs = get_2hop_neighbors(gind,adj)
+			# gind_2hpnbs = list(set(gind_2hpnbs))
+			# gind_2hpnbs.remove(gind)
+			# random.shuffle(gind_2hpnbs)
+			gind_2hpnbs = hops_dict[gind]
 			# map to labels
 			for ind in gind_2hpnbs:
 				# print('better be True: '+str(classids[ind][0]>=0 and classids[ind][1]==1))
