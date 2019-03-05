@@ -8,6 +8,7 @@ import pickle as pkl
 import scipy.io as sio
 import time
 import networkx as nx
+import random
 
 def get_adj():    
     dataset_str = '../../data/glove_res50/'
@@ -20,9 +21,15 @@ def get_adj():
     adj = nx.adjacency_matrix(nx.from_dict_of_lists(graph))
     return adj
 
-def get_2hop_neighbors(gind,adj):
-
-    
+def get_2hop_neighbors(gind,adj,hop_depth=2):
+    if hop_depth<=0:
+        return []
+    inds = []
+    1hops = np.argwhere(adj[gind]==1)
+    for ind in 1hops:
+        inds.append(ind[1])
+        inds += get_2hop_neighbors(ind[1],adj,hop_depth-1)
+    return inds
 
 def test_imagenet_zero(fc_file_pred, has_train=1):
     with open(classids_file_retrain) as fp:
@@ -134,6 +141,7 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 
             # get neighbor 2-hops inds
             gind_2hpnbs = get_2hop_neighbors(gind,adj)
+            random.shuffle(gind_2hpnbs)
             # map to labels
             for ind in gind_2hpnbs:
                 print('better be True: '+str(classids[ind][0]>=0))
