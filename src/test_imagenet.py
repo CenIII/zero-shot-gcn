@@ -11,7 +11,7 @@ import networkx as nx
 import random
 
 def get_adj():    
-	dataset_str = '../../data/glove_res50/'
+	dataset_str = '../data/glove_res50/'
 	with open("{}/ind.NELL.{}".format(dataset_str, 'graph'), 'rb') as f:
 		print("{}/ind.NELL.{}".format(dataset_str, 'graph'))
 		if sys.version_info > (3, 0):
