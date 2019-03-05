@@ -9,6 +9,7 @@ import scipy.io as sio
 import time
 import networkx as nx
 import random
+import sys
 
 def get_adj():    
 	dataset_str = '../data/glove_res50/'
