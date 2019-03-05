@@ -7,7 +7,22 @@ import os
 import pickle as pkl
 import scipy.io as sio
 import time
+import networkx as nx
 
+def get_adj():    
+    dataset_str = '../../data/glove_res50/'
+    with open("{}/ind.NELL.{}".format(dataset_str, 'graph'), 'rb') as f:
+        print("{}/ind.NELL.{}".format(dataset_str, 'graph'))
+        if sys.version_info > (3, 0):
+            graph = pkl.load(f, encoding='latin1')
+        else:
+            graph = pkl.load(f)
+    adj = nx.adjacency_matrix(nx.from_dict_of_lists(graph))
+    return adj
+
+def get_2hop_neighbors(gind,adj):
+
+    
 
 def test_imagenet_zero(fc_file_pred, has_train=1):
     with open(classids_file_retrain) as fp:
@@ -15,6 +30,8 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 
     with open(word2vec_file, 'rb') as fp:
         word2vec_feat = pkl.load(fp,encoding='latin1')
+
+    adj = get_adj()
 
     testlist = []
     testlabels = []
@@ -51,24 +68,27 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
     # process 'train' classes. they are possible candidates during inference
     cnt_zero_wv = 0
     labels_train, word2vec_train = [], []
+    ind_remap = []
     fc_now = []
     for j in range(len(classids)):
         tfc = fc_layers_pred[j]
         if has_train:
             if classids[j][0] < 0:
                 continue
-        else:
-            if classids[j][1] == 0:
-                continue
+        # else:
+        #     if classids[j][1] == 0:
+        #         continue
 
-        if classids[j][0] >= 0:
-            twv = word2vec_feat[j]
+        # if classids[j][0] >= 0:
+        if classids[j][1] == 0:     # preserve train classes only!!!
+            twv = word2vec_feat[j]  
             if np.linalg.norm(twv) == 0:
                 cnt_zero_wv = cnt_zero_wv + 1
                 continue
 
             labels_train.append(classids[j][0])
             word2vec_train.append(twv)
+            ind_remap.append(j)
 
             feat_len = len(tfc)
             tfc = tfc[feat_len - fc_dim: feat_len]
@@ -107,11 +127,25 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 
         ids = np.argsort(-scores)
 
+        # for every ind in the top, find its neighbors in graph as predictions. which 
+        guess_lbls = []
+        for i in range(len(ids)):
+            gind = ind_remap[ids[i]]  # id out of 32297
+
+            # get neighbor 2-hops inds
+            gind_2hpnbs = get_2hop_neighbors(gind,adj)
+            # map to labels
+            for ind in gind_2hpnbs:
+                print('better be True: '+str(classids[ind][0]>=0))
+                guess_lbls.append(classids[ind][0])
+            if len(guess_lbls)>30:
+                break
+
         for k in range(len(topKs)):
             for k2 in range(len(top_retrv)):
                 current_len = top_retrv[k2]
                 for sort_id in range(current_len):
-                    lbl = labels_train[ids[sort_id]]
+                    lbl = guess_lbls[sort_id]
                     if lbl == testlabels[j]:
                         hit_count[k][k2] = hit_count[k][k2] + 1
                         break
