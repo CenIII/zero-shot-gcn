@@ -100,7 +100,8 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 			ind_remap.append(j)
 			gind_2hpnbs = get_2hop_neighbors(j,adj)
 			gind_2hpnbs = list(set(gind_2hpnbs))
-			gind_2hpnbs.remove(j)
+			if not has_train:
+				gind_2hpnbs.remove(j)
 			random.shuffle(gind_2hpnbs)
 
 			hops_dict[j] = gind_2hpnbs
