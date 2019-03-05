@@ -88,7 +88,7 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 		#         continue
 
 		# if classids[j][0] >= 0:
-		if classids[j][1] == 0:     # preserve train classes only!!!
+		if classids[j][1] == 0 && classids[j][0] >= 0:     # preserve train classes only!!!
 			twv = word2vec_feat[j]  
 			if np.linalg.norm(twv) == 0:
 				cnt_zero_wv = cnt_zero_wv + 1
