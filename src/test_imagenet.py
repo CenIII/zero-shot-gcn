@@ -142,7 +142,8 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 
 			# get neighbor 2-hops inds
 			gind_2hpnbs = get_2hop_neighbors(gind,adj)
-			gind_2hpnbs = list(set(gind_2hpnbs)).remove(gind)
+			gind_2hpnbs = list(set(gind_2hpnbs))
+			gind_2hpnbs.remove(gind)
 			random.shuffle(gind_2hpnbs)
 			# map to labels
 			for ind in gind_2hpnbs:
