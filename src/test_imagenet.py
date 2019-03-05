@@ -97,10 +97,11 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 			labels_train.append(classids[j][0])
 			word2vec_train.append(twv)
 			ind_remap.append(j)
-			gind_2hpnbs = get_2hop_neighbors(gind,adj)
+			gind_2hpnbs = get_2hop_neighbors(j,adj)
 			gind_2hpnbs = list(set(gind_2hpnbs))
-			gind_2hpnbs.remove(gind)
+			gind_2hpnbs.remove(j)
 			random.shuffle(gind_2hpnbs)
+
 			hops_dict[j] = gind_2hpnbs
 
 			feat_len = len(tfc)
@@ -156,7 +157,7 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 				# print('better be True: '+str(classids[ind][0]>=0 and classids[ind][1]==1))
 				if classids[ind][0]>=0 and classids[ind][1]==1:
 					guess_lbls.append(classids[ind][0])
-			if len(guess_lbls)>30:
+			if len(guess_lbls)>25:
 				break
 
 		for k in range(len(topKs)):
