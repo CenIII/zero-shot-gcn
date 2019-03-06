@@ -173,7 +173,7 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 		guess_fcs = []
 		for i in range(len(guess_lbls)):
 			guess_fcs.append(fc_layers_pred[guess_ids[i]])
-		guess_scores = np.dot(matfeat, np.array(guess_fcs)).squeeze()
+		guess_scores = np.dot(matfeat, np.array(guess_fcs).T).squeeze()
 		sorted_guess_ids = np.argsort(-guess_scores)
 		guess_lbls = np.array(guess_lbls)[sorted_guess_ids]
 
