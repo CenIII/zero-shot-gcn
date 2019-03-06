@@ -134,8 +134,8 @@ for i in range(7):
     act = activs_list[i]
     errors[i] = np.sum((act[0]-act[1])**2)/(act[0].shape[0]*act[0].shape[1])
 
-print(erros)
-np.save('erros',erros)
+print(errors)
+np.save('errors',errors)
 
 
 
