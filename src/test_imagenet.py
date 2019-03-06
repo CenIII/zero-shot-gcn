@@ -169,7 +169,7 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 			if len(guess_lbls)>30:
 				break
 		
-		guess_scores = None
+		guess_scores = []
 		
 		for i in range(len(guess_lbls)):
 			guess_scores.append(scores[guess_ids[i]])
