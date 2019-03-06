@@ -14,6 +14,7 @@ from models import GCN_dense_mse
 import networkx as nx
 import random
 import sys
+import json
 
 def get_adj():    
     dataset_str = '../data/glove_res50/'
@@ -88,7 +89,7 @@ def compute_mean_var(output,hops_dict):
         values = [hops_dict[k]]
         nbs = hops_dict[k]
         for j in nbs:
-            values.append(hops_dict[j])
+            values.append(output[j])
         var_list.append(np.var(np.array(values),axis=1))
     mean_var = np.mean(var_list)
     return mean_var
