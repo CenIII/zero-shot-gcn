@@ -144,6 +144,7 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 		ids = np.argsort(-scores)
 
 		# for every ind in the top, find its neighbors in graph as predictions. which 
+		guess_ids = []
 		guess_lbls = []
 		for i in range(len(ids)):
 			gind = ind_remap[ids[i]]  # id out of 32297
@@ -159,12 +160,21 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 				# print('better be True: '+str(classids[ind][0]>=0 and classids[ind][1]==1))
 				if not has_train:
 					if classids[ind][0]>=0 and classids[ind][1]==1:
+						guess_ids.append(ind)
 						guess_lbls.append(classids[ind][0])
 				else:
 					if classids[ind][0]>=0:
+						guess_ids.append(ind)
 						guess_lbls.append(classids[ind][0])
-			if len(guess_lbls)>25:
+			if len(guess_lbls)>30:
 				break
+		
+		guess_scores = None
+		
+		for i in range(len(guess_lbls)):
+			guess_scores.append(scores[guess_ids[i]])
+		sorted_guess_ids = np.argsort(-guess_scores)
+		guess_lbls = np.array(guess_lbls)[sorted_guess_ids]
 
 		for k in range(len(topKs)):
 			for k2 in range(len(top_retrv)):
