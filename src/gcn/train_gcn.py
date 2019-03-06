@@ -10,6 +10,7 @@ import numpy as np
 
 from utils import *
 from models import GCN_dense_mse
+import random
 
 # Set random seed
 seed = 123
@@ -66,58 +67,75 @@ placeholders = {
     'learning_rate': tf.placeholder(tf.float32, shape=())
 }
 
-# Create model
-model = model_func(placeholders, input_dim=features.shape[1], logging=True)
+activs_list = [[] for i in range(7)]
+for session in range(2):
+    random.shuffle(features)
+    # Create model
+    model = model_func(placeholders, input_dim=features.shape[1], logging=True)
 
-sess = tf.Session(config=create_config_proto())
+    sess = tf.Session(config=create_config_proto())
 
-# Init variables
-sess.run(tf.global_variables_initializer())
+    # Init variables
+    sess.run(tf.global_variables_initializer())
 
-cost_val = []
+    cost_val = []
 
-save_epochs = [300, 3000]
+    save_epochs = [300, 3000]
 
-savepath = FLAGS.save_path
-exp_name = os.path.basename(FLAGS.dataset)
-savepath = os.path.join(savepath, exp_name)
-if not os.path.exists(savepath):
-    os.makedirs(savepath)
-    print('!!! Make directory %s' % savepath)
-else:
-    print('### save to: %s' % savepath)
+    savepath = FLAGS.save_path
+    exp_name = os.path.basename(FLAGS.dataset)
+    savepath = os.path.join(savepath, exp_name)
+    if not os.path.exists(savepath):
+        os.makedirs(savepath)
+        print('!!! Make directory %s' % savepath)
+    else:
+        print('### save to: %s' % savepath)
 
-# Train model
-now_lr = FLAGS.learning_rate
-for epoch in range(FLAGS.epochs):
-    t = time.time()
-    # Construct feed dictionary
-    feed_dict = construct_feed_dict(features, support, y_train, train_mask, placeholders)
-    feed_dict.update({placeholders['learning_rate']: now_lr})
+    # Train model
+    now_lr = FLAGS.learning_rate
+    for epoch in range(FLAGS.epochs):
+        t = time.time()
+        # Construct feed dictionary
+        feed_dict = construct_feed_dict(features, support, y_train, train_mask, placeholders)
+        feed_dict.update({placeholders['learning_rate']: now_lr})
 
-    # Training step
-    outs = sess.run([model.opt_op, model.loss, model.accuracy, model.optimizer._lr], feed_dict=feed_dict)
+        # Training step
+        outs = sess.run([model.opt_op, model.loss, model.accuracy, model.optimizer._lr, model.activations], feed_dict=feed_dict)
 
-    if epoch % 20 == 0:
-        print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
-              "train_loss_nol2=", "{:.5f}".format(outs[2]),
-              "time=", "{:.5f}".format(time.time() - t),
-              "lr=", "{:.5f}".format(float(outs[3])))
+        if epoch % 20 == 0:
+            print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
+                  "train_loss_nol2=", "{:.5f}".format(outs[2]),
+                  "time=", "{:.5f}".format(time.time() - t),
+                  "lr=", "{:.5f}".format(float(outs[3])))
 
-    flag = 0
-    for k in range(len(save_epochs)):
-        if save_epochs[k] == epoch:
-            flag = 1
+        flag = 0
+        for k in range(len(save_epochs)):
+            if save_epochs[k] == epoch:
+                flag = 1
 
-    if flag == 1 or epoch % 500 == 0:
-        outs = sess.run(model.outputs, feed_dict=feed_dict)
-        filename = savepath + '/feat_' + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
-        print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
+        if epoch % 300 == 0:#flag == 1 or epoch % 500 == 0:
+            # outs = sess.run(model.outputs, feed_dict=feed_dict)
+            # filename = savepath + '/feat_' + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
+            # print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
 
-        filehandler = open(filename, 'wb')
-        pkl.dump(outs, filehandler)
-        filehandler.close()
+            # filehandler = open(filename, 'wb')
+            # pkl.dump(outs, filehandler)
+            # filehandler.close()
+            activs = sess.run(model.activations, feed_dict=feed_dict)
+            for l in range(7):
+                activs_list[l].append(activs[l])
 
-print("Optimization Finished!")
+    print("Optimization Finished!")
 
-sess.close()
+    sess.close()
+
+errors = np.zeros(7)
+for i in range(7):
+    act = activs_list[i]
+    errors[i] = np.sum((act[0]-act[1])**2)/(act[0].shape[0]*act[0].shape[1])
+
+print(erros)
+np.save('erros',erros)
+
+
+
