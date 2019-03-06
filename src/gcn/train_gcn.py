@@ -224,9 +224,9 @@ for epoch in range(FLAGS.epochs):
             flag = 1
 
     if flag == 1 or epoch % 500 == 0:
-        np.save(mean_var_1k,'mean_var_1k')
-        np.save(mean_var_rand,'mean_var_rand')
-        np.save(trans_dist,'trans_dist')
+        np.save('mean_var_1k',np.array(mean_var_1k))
+        np.save('mean_var_rand',np.array(mean_var_rand))
+        np.save('trans_dist',np.array(trans_dist))
         outs = sess.run(model.outputs, feed_dict=feed_dict)
         filename = savepath + '/feat_' + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
         print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
