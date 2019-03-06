@@ -11,6 +11,31 @@ import numpy as np
 from utils import *
 from models import GCN_dense_mse
 
+import networkx as nx
+import random
+import sys
+
+def get_adj():    
+    dataset_str = '../data/glove_res50/'
+    with open("{}/ind.NELL.{}".format(dataset_str, 'graph'), 'rb') as f:
+        print("{}/ind.NELL.{}".format(dataset_str, 'graph'))
+        if sys.version_info > (3, 0):
+            graph = pkl.load(f, encoding='latin1')
+        else:
+            graph = pkl.load(f)
+    adj = nx.adjacency_matrix(nx.from_dict_of_lists(graph))
+    return adj
+
+def get_2hop_neighbors(gind,adj,hop_depth=2):
+    if hop_depth<=0:
+        return []
+    inds = []
+    hops = np.argwhere(adj[gind]==1)
+    for ind in hops:
+        inds.append(ind[1])
+        inds += get_2hop_neighbors(ind[1],adj,hop_depth-1)
+    return inds
+
 # Set random seed
 seed = 123
 np.random.seed(seed)
@@ -88,6 +113,8 @@ else:
     print('### save to: %s' % savepath)
 
 # Train model
+adj = get_adj()
+
 now_lr = FLAGS.learning_rate
 for epoch in range(FLAGS.epochs):
     t = time.time()
