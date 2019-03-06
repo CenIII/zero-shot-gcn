@@ -98,6 +98,13 @@ for epoch in range(FLAGS.epochs):
     # Training step
     outs = sess.run([model.opt_op, model.loss, model.accuracy, model.optimizer._lr], feed_dict=feed_dict)
 
+    # get neighbors indices of all known classes
+    
+    # calculate and average variances for all 1000 classes
+
+    # calculate and average variances for random classes
+
+
     if epoch % 20 == 0:
         print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
               "train_loss_nol2=", "{:.5f}".format(outs[2]),
