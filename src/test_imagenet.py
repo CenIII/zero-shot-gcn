@@ -169,10 +169,11 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 			if len(guess_lbls)>30:
 				break
 		
-		guess_scores = []
-		
+		guess_scores = None
+		guess_fcs = []
 		for i in range(len(guess_lbls)):
-			guess_scores.append(scores[guess_ids[i]])
+			guess_fcs.append(fc_layers_pred[guess_ids[i]])
+		guess_scores = np.dot(matfeat, np.array(guess_fcs)).squeeze()
 		sorted_guess_ids = np.argsort(-guess_scores)
 		guess_lbls = np.array(guess_lbls)[sorted_guess_ids]
 
