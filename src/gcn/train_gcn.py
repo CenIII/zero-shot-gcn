@@ -36,7 +36,10 @@ def get_2hop_neighbors(gind,adj,hop_depth=2):
         inds += get_2hop_neighbors(ind[1],adj,hop_depth-1)
     return inds
 
-def test_imagenet_zero(has_train=1):
+def get_hops_dict():
+    data_dir = '../data/list/'
+    classids_file_retrain = os.path.join(data_dir, 'corresp-2-hops.json')   
+    word2vec_file = '../data/word_embedding_model/glove_word2vec_wordnet.pkl'  
     with open(classids_file_retrain) as fp:
         classids = json.load(fp)
 
@@ -63,13 +66,11 @@ def test_imagenet_zero(has_train=1):
     ind_remap = []
     hops_dict = {}
     for j in range(len(classids)):
-        
         if classids[j][1] == 0 and classids[j][0] >= 0:     # preserve train classes only!!!
             twv = word2vec_feat[j]  
             if np.linalg.norm(twv) == 0:
                 cnt_zero_wv = cnt_zero_wv + 1
                 continue
-
             labels_train.append(classids[j][0])
             word2vec_train.append(twv)
             ind_remap.append(j)
@@ -78,7 +79,30 @@ def test_imagenet_zero(has_train=1):
             gind_2hpnbs.remove(j)
             random.shuffle(gind_2hpnbs)
             hops_dict[j] = gind_2hpnbs
-    return 
+    return hops_dict
+
+
+def compute_mean_var(output,hops_dict):
+    var_list = []
+    for k in hops_dict:
+        values = [hops_dict[k]]
+        nbs = hops_dict[k]
+        for j in nbs:
+            values.append(hops_dict[j])
+        var_list.append(np.var(np.array(values),axis=1))
+    mean_var = np.mean(var_list)
+    return mean_var
+
+def compute_rand_var(output):
+    var_list = []
+    for i in range(1000):
+        # random sample 5 numbers
+        inds = np.random.choice(32200, 5)
+        # get 5 values
+        values = [output[inds[i]] for i in range(5)]
+        var_list.append(np.var(np.array(values),axis=1))
+    mean_var = np.mean(var_list)
+    return mean_var
 
 # Set random seed
 seed = 123
@@ -157,7 +181,7 @@ else:
     print('### save to: %s' % savepath)
 
 # Train model
-adj = get_adj()
+hops_dict = get_hops_dict()
 
 now_lr = FLAGS.learning_rate
 for epoch in range(FLAGS.epochs):
@@ -167,17 +191,16 @@ for epoch in range(FLAGS.epochs):
     feed_dict.update({placeholders['learning_rate']: now_lr})
 
     # Training step
-    outs = sess.run([model.opt_op, model.loss, model.accuracy, model.optimizer._lr], feed_dict=feed_dict)
+    outs = sess.run([model.opt_op, model.loss, model.accuracy, model.optimizer._lr, model.outputs], feed_dict=feed_dict)
 
     # get neighbors indices of all known classes
-    
     # calculate and average variances for all 1000 classes
-
+    mean_var_1k = compute_mean_var(outs[4],hops_dict)
     # calculate and average variances for random classes
-
+    mean_var_rand = compute_rand_var(outs[4])
 
     if epoch % 20 == 0:
-        print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
+        print("Epoch:", '%04d' % (epoch + 1), "mean_var_1k=","{:.5f}".format(mean_var_1k.sum()),"mean_var_rand=","{:.5f}".format(mean_var_rand.sum()),"train_loss=", "{:.5f}".format(outs[1]),
               "train_loss_nol2=", "{:.5f}".format(outs[2]),
               "time=", "{:.5f}".format(time.time() - t),
               "lr=", "{:.5f}".format(float(outs[3])))
