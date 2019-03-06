@@ -89,6 +89,7 @@ else:
 
 # Train model
 now_lr = FLAGS.learning_rate
+train_mask_rev = True^train_mask
 for epoch in range(FLAGS.epochs):
     t = time.time()
     # Construct feed dictionary
@@ -111,6 +112,7 @@ for epoch in range(FLAGS.epochs):
 
     if flag == 1 or epoch % 500 == 0:
         outs = sess.run(model.outputs, feed_dict=feed_dict)
+        outs = outs*train_mask_rev + y_train*train_mask
         filename = savepath + '/feat_' + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
         print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
 
