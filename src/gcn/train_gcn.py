@@ -82,35 +82,35 @@ def get_hops_dict():
             hops_dict[j] = gind_2hpnbs
     return hops_dict
 
+# def compute_mean_var(output,hops_dict):
+#     var_list = []
+#     for k in hops_dict:
+#         values = [output[k]]
+#         nbs = hops_dict[k]
+#         for j in nbs:
+#             values.append(output[j])
+#         var_list.append(np.var(np.array(values),axis=0))
+#     mean_var = np.mean(var_list)
+#     return mean_var
 
-def compute_mean_var(output,hops_dict):
-    var_list = []
-    for k in hops_dict:
-        values = [output[k]]
-        nbs = hops_dict[k]
-        for j in nbs:
-            values.append(output[j])
-        var_list.append(np.var(np.array(values),axis=0))
-    mean_var = np.mean(var_list)
-    return mean_var
+# def compute_rand_var(output):
+#     var_list = []
+#     for i in range(1000):
+#         # random sample 5 numbers
+#         inds = np.random.choice(32200, 5)
+#         # get 5 values
+#         values = [output[inds[i]] for i in range(5)]
+#         var_list.append(np.var(np.array(values),axis=0))
+#     mean_var = np.mean(var_list)
+#     return mean_var
 
-def compute_rand_var(output):
-    var_list = []
-    for i in range(1000):
-        # random sample 5 numbers
-        inds = np.random.choice(32200, 5)
-        # get 5 values
-        values = [output[inds[i]] for i in range(5)]
-        var_list.append(np.var(np.array(values),axis=0))
-    mean_var = np.mean(var_list)
-    return mean_var
+# def compute_trans(init_out,out,hops_dict):
+#     diff = 0
+#     for k in hops_dict:
+#         diff += (out[k]-init_out[k])**2
+#     diff /= 989
+#     return diff
 
-def compute_trans(init_out,out,hops_dict):
-    diff = 0
-    for k in hops_dict:
-        diff += (out[k]-init_out[k])**2
-    diff /= 989
-    return diff
 # Set random seed
 seed = 123
 np.random.seed(seed)
@@ -188,52 +188,81 @@ else:
     print('### save to: %s' % savepath)
 
 # Train model
-hops_dict = get_hops_dict()
+# hops_dict = get_hops_dict()
+def get_nbs_all(adj):
+    nbs = {}
+    for i in range(adj.shape[0]):
+        tmp = np.argwhere(adj[i]==1)
+        tmp = [tmp[j][1] for j in range(len(tmp))]
+        nbs[i] = tmp
+    return nbs
+
+adj = get_adj()
+nbs = get_nbs_all(adj)
 
 now_lr = FLAGS.learning_rate
 init_output = 0
-mean_var_1k = []
-mean_var_rand = []
-trans_dist = []
+# mean_var_1k = []
+# mean_var_rand = []
+# trans_dist = []
+
+def newton_update(output,mask,nbs):
+    N = len(output)
+    for i in range(N):
+        if mask[i][0] == False:
+            nb_list = nbs[i]
+            output[i] = 0
+            for nb in nb_list:
+                output[i] += output[nb]
+            output[i] /= len(nb_list) 
+    return output
+
 for epoch in range(FLAGS.epochs):
     t = time.time()
     # Construct feed dictionary
-    feed_dict = construct_feed_dict(features, support, y_train, train_mask, placeholders)
-    feed_dict.update({placeholders['learning_rate']: now_lr})
+    # feed_dict = construct_feed_dict(features, support, y_train, train_mask, placeholders)
+    # feed_dict.update({placeholders['learning_rate']: now_lr})
 
+    next_y_train = newton_update(y_train.copy(),train_mask,nbs)
+    error = np.sum((next_y_train-y_train)**2)
+    y_train = next_y_train
     # Training step
-    outs = sess.run([model.opt_op, model.loss, model.accuracy, model.optimizer._lr, model.outputs], feed_dict=feed_dict)
-    if epoch == 0:
-        init_output = outs[4]
-    # get neighbors indices of all known classes
-    # calculate and average variances for all 1000 classes
-    mean_var_1k.append((compute_mean_var(outs[4],hops_dict)).sum())
-    # calculate and average variances for random classes
-    mean_var_rand.append((compute_rand_var(outs[4])).sum())
-    trans_dist.append((compute_trans(init_output,outs[4],hops_dict)).sum())
+    # outs = sess.run([model.opt_op, model.loss, model.accuracy, model.optimizer._lr, model.outputs], feed_dict=feed_dict)
+    # if epoch == 0:
+    #     init_output = outs[4]
+
+
+    # # get neighbors indices of all known classes
+    # # calculate and average variances for all 1000 classes
+    # mean_var_1k.append((compute_mean_var(outs[4],hops_dict)).sum())
+    # # calculate and average variances for random classes
+    # mean_var_rand.append((compute_rand_var(outs[4])).sum())
+    # trans_dist.append((compute_trans(init_output,outs[4],hops_dict)).sum())
 
     if epoch % 1 == 0:
-        print("Epoch:", '%04d' % (epoch + 1), "mean_var_1k=","{:.5f}".format(mean_var_1k[-1]*10000),"mean_var_rand=","{:.5f}".format(mean_var_rand[-1]*10000),"tans_dist=","{:.5f}".format(trans_dist[-1]*10000),"train_loss=", "{:.5f}".format(outs[1]),
-              "train_loss_nol2=", "{:.5f}".format(outs[2]),
-              "time=", "{:.5f}".format(time.time() - t),
-              "lr=", "{:.5f}".format(float(outs[3])))
+        print("Epoch:", '%04d' % (epoch + 1), "error=", "{:.5f}".format(error))
+            # ,"train_loss=", "{:.5f}".format(outs[1]),
+            #   "train_loss_nol2=", "{:.5f}".format(outs[2]),
+            #   "time=", "{:.5f}".format(time.time() - t),
+            #   "lr=", "{:.5f}".format(float(outs[3])))
 
     flag = 0
     for k in range(len(save_epochs)):
         if save_epochs[k] == epoch:
             flag = 1
 
-    if flag == 1 or epoch % 500 == 0:
-        np.save('mean_var_1k',np.array(mean_var_1k))
-        np.save('mean_var_rand',np.array(mean_var_rand))
-        np.save('trans_dist',np.array(trans_dist))
-        outs = sess.run(model.outputs, feed_dict=feed_dict)
+    if epoch == 200: #flag == 1 or epoch % 500 == 0:
+        # np.save('mean_var_1k',np.array(mean_var_1k))
+        # np.save('mean_var_rand',np.array(mean_var_rand))
+        # np.save('trans_dist',np.array(trans_dist))
+        # outs = sess.run(model.outputs, feed_dict=feed_dict)
         filename = savepath + '/feat_' + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
         print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
 
         filehandler = open(filename, 'wb')
-        pkl.dump(outs, filehandler)
+        pkl.dump(y_train, filehandler)
         filehandler.close()
+        break
 
 print("Optimization Finished!")
 
