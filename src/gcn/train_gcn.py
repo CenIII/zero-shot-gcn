@@ -86,7 +86,7 @@ def get_hops_dict():
 def compute_mean_var(output,hops_dict):
     var_list = []
     for k in hops_dict:
-        values = [hops_dict[k]]
+        values = [output[k]]
         nbs = hops_dict[k]
         for j in nbs:
             values.append(output[j])
