@@ -36,7 +36,7 @@ def get_2hop_neighbors(gind,adj,hop_depth=2):
         inds += get_2hop_neighbors(ind[1],adj,hop_depth-1)
     return inds
 
-def test_imagenet_zero(fc_file_pred, has_train=1):
+def test_imagenet_zero(has_train=1):
     with open(classids_file_retrain) as fp:
         classids = json.load(fp)
 
@@ -45,26 +45,6 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 
     adj = get_adj()
 
-    testlist = []
-    testlabels = []
-    with open(vallist_folder) as fp:
-        for line in fp:
-            fname, lbl = line.split()
-            assert int(lbl) >= 1000
-            # feat_name = os.path.join(feat_folder, fname.replace('.JPEG', '.mat'))
-            feat_name = os.path.join(feat_folder, fname.replace('.JPG', '.npz'))
-            if not os.path.exists(feat_name):
-                print('not feature', feat_name)
-                continue
-            testlist.append(feat_name)
-            testlabels.append(int(lbl))
-
-    with open(fc_file_pred, 'rb') as fp:
-        fc_layers_pred = pkl.load(fp)
-    fc_layers_pred = np.array(fc_layers_pred)
-    print('fc output', fc_layers_pred.shape)
-
-    # remove invalid classes(wv = 0)
     valid_clss = np.zeros(22000)
     cnt_zero_wv = 0
     for j in range(len(classids)):
@@ -81,18 +61,9 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
     cnt_zero_wv = 0
     labels_train, word2vec_train = [], []
     ind_remap = []
-    fc_now = []
     hops_dict = {}
     for j in range(len(classids)):
-        tfc = fc_layers_pred[j]
-        if has_train:
-            if classids[j][0] < 0:
-                continue
-        # else:
-        #     if classids[j][1] == 0:
-        #         continue
-
-        # if classids[j][0] >= 0:
+        
         if classids[j][1] == 0 and classids[j][0] >= 0:     # preserve train classes only!!!
             twv = word2vec_feat[j]  
             if np.linalg.norm(twv) == 0:
@@ -104,10 +75,9 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
             ind_remap.append(j)
             gind_2hpnbs = get_2hop_neighbors(j,adj)
             gind_2hpnbs = list(set(gind_2hpnbs))
-            if not has_train:
-                gind_2hpnbs.remove(j)
+            gind_2hpnbs.remove(j)
             random.shuffle(gind_2hpnbs)
-            
+            hops_dict[j] = gind_2hpnbs
     return 
 
 # Set random seed
