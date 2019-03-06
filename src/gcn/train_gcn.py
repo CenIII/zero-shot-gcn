@@ -105,6 +105,12 @@ def compute_rand_var(output):
     mean_var = np.mean(var_list)
     return mean_var
 
+def compute_trans(init_out,out,hops_dict):
+    diff = 0
+    for k in hops_dict:
+        diff += (out[k]-init_out[k])**2
+    diff /= 989
+    return diff
 # Set random seed
 seed = 123
 np.random.seed(seed)
@@ -185,6 +191,7 @@ else:
 hops_dict = get_hops_dict()
 
 now_lr = FLAGS.learning_rate
+init_output = 0
 for epoch in range(FLAGS.epochs):
     t = time.time()
     # Construct feed dictionary
@@ -193,15 +200,17 @@ for epoch in range(FLAGS.epochs):
 
     # Training step
     outs = sess.run([model.opt_op, model.loss, model.accuracy, model.optimizer._lr, model.outputs], feed_dict=feed_dict)
-
+    if epoch == 0:
+        init_output = outs[4]
     # get neighbors indices of all known classes
     # calculate and average variances for all 1000 classes
     mean_var_1k = compute_mean_var(outs[4],hops_dict)
     # calculate and average variances for random classes
     mean_var_rand = compute_rand_var(outs[4])
+    trans_dist = compute_trans(init_output,outs[4],hops_dict)
 
-    if epoch % 20 == 0:
-        print("Epoch:", '%04d' % (epoch + 1), "mean_var_1k=","{:.5f}".format(mean_var_1k.sum()),"mean_var_rand=","{:.5f}".format(mean_var_rand.sum()),"train_loss=", "{:.5f}".format(outs[1]),
+    if epoch % 1 == 0:
+        print("Epoch:", '%04d' % (epoch + 1), "mean_var_1k=","{:.5f}".format(mean_var_1k.sum()*10000),"mean_var_rand=","{:.5f}".format(mean_var_rand.sum()*10000),"tans_dist=","{:.5f}".format(trans_dist.sum()*10000),"train_loss=", "{:.5f}".format(outs[1]),
               "train_loss_nol2=", "{:.5f}".format(outs[2]),
               "time=", "{:.5f}".format(time.time() - t),
               "lr=", "{:.5f}".format(float(outs[3])))
