@@ -90,7 +90,7 @@ def compute_mean_var(output,hops_dict):
         nbs = hops_dict[k]
         for j in nbs:
             values.append(output[j])
-        var_list.append(np.var(np.array(values),axis=1))
+        var_list.append(np.var(np.array(values),axis=0))
     mean_var = np.mean(var_list)
     return mean_var
 
@@ -101,7 +101,7 @@ def compute_rand_var(output):
         inds = np.random.choice(32200, 5)
         # get 5 values
         values = [output[inds[i]] for i in range(5)]
-        var_list.append(np.var(np.array(values),axis=1))
+        var_list.append(np.var(np.array(values),axis=0))
     mean_var = np.mean(var_list)
     return mean_var
 
