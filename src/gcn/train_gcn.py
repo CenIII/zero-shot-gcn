@@ -91,7 +91,7 @@ else:
 # Train model
 now_lr = FLAGS.learning_rate
 
-grads_wrt_input_tensor = tf.gradients(model.loss,placeholders['features'])
+# grads_wrt_input_tensor = tf.gradients(model.loss,placeholders['features'])
 
 for epoch in range(FLAGS.epochs):
     t = time.time()
@@ -100,12 +100,7 @@ for epoch in range(FLAGS.epochs):
     feed_dict.update({placeholders['learning_rate']: now_lr})
 
     # Training step
-    outs = sess.run([model.opt_op, model.loss, model.accuracy, model.optimizer._lr, grads_wrt_input_tensor], feed_dict=feed_dict)
-
-    # look at outs[4] now. 
-    inp_grad = outs[4][0]
-    # update features
-    features -= inp_grad
+    outs = sess.run([model.opt_op, model.loss, model.accuracy, model.optimizer._lr], feed_dict=feed_dict)
     
     if epoch % 20 == 0:
         print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
