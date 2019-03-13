@@ -12,7 +12,7 @@ from utils import *
 from models import GCN_dense_mse
 
 # Set random seed
-seed = 123
+seed = int(time.time())%100
 np.random.seed(seed)
 tf.set_random_seed(seed)
 
@@ -23,7 +23,7 @@ flags.DEFINE_string('dataset', '../../data/glove_res50/', 'Dataset string.')
 flags.DEFINE_string('model', 'dense', 'Model string.')
 flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate.')
 flags.DEFINE_string('save_path', '../output/', 'save dir')
-flags.DEFINE_integer('epochs', 350, 'Number of epochs to train.')
+flags.DEFINE_integer('epochs', 500, 'Number of epochs to train.')
 flags.DEFINE_integer('hidden1', 2048, 'Number of units in hidden layer 1.')
 flags.DEFINE_integer('hidden2', 2048, 'Number of units in hidden layer 1.')
 flags.DEFINE_integer('hidden3', 1024, 'Number of units in hidden layer 1.')
@@ -109,7 +109,7 @@ for epoch in range(FLAGS.epochs):
         if save_epochs[k] == epoch:
             flag = 1
 
-    if flag == 1 or epoch % 500 == 0:
+    if outs[1]<140000:#flag == 1 or epoch % 500 == 0:
         outs = sess.run(model.outputs, feed_dict=feed_dict)
         filename = savepath + '/feat_' + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
         print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
@@ -117,7 +117,7 @@ for epoch in range(FLAGS.epochs):
         filehandler = open(filename, 'wb')
         pkl.dump(outs, filehandler)
         filehandler.close()
-
+        break
 print("Optimization Finished!")
 
 sess.close()
