@@ -12,7 +12,7 @@ from utils import *
 from models import GCN_dense_mse
 
 # Set random seed
-seed = 123
+seed = int(time.time())%100
 np.random.seed(seed)
 tf.set_random_seed(seed)
 
