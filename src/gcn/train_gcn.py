@@ -137,22 +137,22 @@ for outer_iter in range(5):
             if save_epochs[k] == epoch:
                 flag = 1
 
-        if flag == 1 or outs[1]<140000:
+        if flag == 1 or outs[1]<60000:
             outs = sess.run(model.outputs, feed_dict=feed_dict)
 
-            filename = savepath + '/feat_out' # + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
+            filename = savepath + '/feat__' # + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
             print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
 
             filehandler = open(filename, 'wb')
             pkl.dump(outs, filehandler)
             filehandler.close()
 
-            filename = savepath + '/feat_inp'# + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
-            print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
+            # filename = savepath + '/feat_inp'# + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
+            # print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
 
-            filehandler = open(filename, 'wb')
-            pkl.dump(features, filehandler)
-            filehandler.close()
+            # filehandler = open(filename, 'wb')
+            # pkl.dump(features, filehandler)
+            # filehandler.close()
             break
 
 
