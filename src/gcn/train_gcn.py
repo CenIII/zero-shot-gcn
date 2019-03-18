@@ -111,7 +111,7 @@ for epoch in range(FLAGS.epochs):
 
     if outs[1]<60000:#flag == 1 or epoch % 500 == 0:
         outs = sess.run(model.outputs, feed_dict=feed_dict)
-        filename = savepath + '/feat_' + os.path.basename(FLAGS.dataset) +# '_' + str(epoch)
+        filename = savepath + '/feat_' + os.path.basename(FLAGS.dataset) #+ '_' + str(epoch)
         print(time.strftime('[%X %x %Z]\t') + 'save to: ' + filename)
 
         filehandler = open(filename, 'wb')
