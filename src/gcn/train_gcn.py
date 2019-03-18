@@ -34,8 +34,10 @@ flags.DEFINE_float('weight_decay', 5e-4, 'Weight for L2 loss on embedding matrix
 flags.DEFINE_integer('early_stopping', 10, 'Tolerance for early stopping (# of epochs).')
 flags.DEFINE_integer('max_degree', 3, 'Maximum Chebyshev polynomial degree.')
 flags.DEFINE_string('gpu', '0', 'gpu id')
+flags.DEFINE_string('thres', '140000', 'gpu id')
 os.environ['CUDA_VISIBLE_DEVICES'] = FLAGS.gpu
 
+thres = int(FLAGS.thres)
 use_trainval = True
 feat_suffix = 'allx_dense'
 
@@ -137,7 +139,7 @@ for outer_iter in range(5):
             if save_epochs[k] == epoch:
                 flag = 1
 
-        if flag == 1 or outs[1]<60000:
+        if flag == 1 or outs[1]<thres:
             outs = sess.run(model.outputs, feed_dict=feed_dict)
 
             filename = savepath + '/feat__' # + os.path.basename(FLAGS.dataset) + '_' + str(epoch)
