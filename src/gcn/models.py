@@ -206,39 +206,39 @@ class GCN_dense_mse(Model_dense):
                                             sparse_inputs=False,
                                             logging=self.logging))
 
+        # self.layers.append(GraphConvolution(input_dim=FLAGS.hidden1,
+        #                                     output_dim=FLAGS.hidden2,
+        #                                     placeholders=self.placeholders,
+        #                                     act=lambda x: tf.maximum(x, 0.2 * x),
+        #                                     dropout=False,
+        #                                     sparse_inputs=False,
+        #                                     logging=self.logging))
+
+        # self.layers.append(GraphConvolution(input_dim=FLAGS.hidden2,
+        #                                     output_dim=FLAGS.hidden3,
+        #                                     placeholders=self.placeholders,
+        #                                     act=lambda x: tf.maximum(x, 0.2 * x),
+        #                                     dropout=False,
+        #                                     sparse_inputs=False,
+        #                                     logging=self.logging))
+
+        # self.layers.append(GraphConvolution(input_dim=FLAGS.hidden3,
+        #                                     output_dim=FLAGS.hidden4,
+        #                                     placeholders=self.placeholders,
+        #                                     act=lambda x: tf.maximum(x, 0.2 * x),
+        #                                     dropout=False,
+        #                                     sparse_inputs=False,
+        #                                     logging=self.logging))
+
+        # self.layers.append(GraphConvolution(input_dim=FLAGS.hidden4,
+        #                                     output_dim=FLAGS.hidden5,
+        #                                     placeholders=self.placeholders,
+        #                                     act=lambda x: tf.maximum(x, 0.2 * x),
+        #                                     dropout=True,
+        #                                     sparse_inputs=False,
+        #                                     logging=self.logging))
+
         self.layers.append(GraphConvolution(input_dim=FLAGS.hidden1,
-                                            output_dim=FLAGS.hidden2,
-                                            placeholders=self.placeholders,
-                                            act=lambda x: tf.maximum(x, 0.2 * x),
-                                            dropout=False,
-                                            sparse_inputs=False,
-                                            logging=self.logging))
-
-        self.layers.append(GraphConvolution(input_dim=FLAGS.hidden2,
-                                            output_dim=FLAGS.hidden3,
-                                            placeholders=self.placeholders,
-                                            act=lambda x: tf.maximum(x, 0.2 * x),
-                                            dropout=False,
-                                            sparse_inputs=False,
-                                            logging=self.logging))
-
-        self.layers.append(GraphConvolution(input_dim=FLAGS.hidden3,
-                                            output_dim=FLAGS.hidden4,
-                                            placeholders=self.placeholders,
-                                            act=lambda x: tf.maximum(x, 0.2 * x),
-                                            dropout=False,
-                                            sparse_inputs=False,
-                                            logging=self.logging))
-
-        self.layers.append(GraphConvolution(input_dim=FLAGS.hidden4,
-                                            output_dim=FLAGS.hidden5,
-                                            placeholders=self.placeholders,
-                                            act=lambda x: tf.maximum(x, 0.2 * x),
-                                            dropout=True,
-                                            sparse_inputs=False,
-                                            logging=self.logging))
-
-        self.layers.append(GraphConvolution(input_dim=FLAGS.hidden5,
                                             output_dim=self.output_dim,
                                             placeholders=self.placeholders,
                                             act=lambda x: tf.nn.l2_normalize(x, dim=1),
