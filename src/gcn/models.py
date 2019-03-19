@@ -202,7 +202,7 @@ class GCN_dense_mse(Model_dense):
                                             output_dim=FLAGS.hidden1,
                                             placeholders=self.placeholders,
                                             act=lambda x: tf.maximum(x, 0.2 * x),
-                                            dropout=False,
+                                            dropout=True,
                                             sparse_inputs=False,
                                             logging=self.logging))
 

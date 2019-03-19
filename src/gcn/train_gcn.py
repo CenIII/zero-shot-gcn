@@ -61,7 +61,7 @@ placeholders = {
     'features': tf.placeholder(tf.float32, shape=(features.shape[0], features.shape[1])),  # sparse_placeholder
     'labels': tf.placeholder(tf.float32, shape=(None, y_train.shape[1])),
     'labels_mask': tf.placeholder(tf.int32),
-    'dropout': tf.placeholder_with_default(0., shape=()),
+    'dropout': tf.placeholder_with_default(0.5, shape=()),
     'num_features_nonzero': tf.placeholder(tf.int32),  # helper variable for sparse dropout
     'learning_rate': tf.placeholder(tf.float32, shape=())
 }
