@@ -34,7 +34,7 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
             # testlabels.append(int(lbl))
 
     keep_ratio = 0.2
-    for k,v in testdict:
+    for k,v in testdict.items():
         random.shuffle(v)
         keep_list = v[:int(len(v)*0.2)]
         testlist += keep_list
