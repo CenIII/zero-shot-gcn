@@ -7,7 +7,7 @@ import os
 import pickle as pkl
 import scipy.io as sio
 import time
-
+import random
 
 def test_imagenet_zero(fc_file_pred, has_train=1):
     with open(classids_file_retrain) as fp:
@@ -18,6 +18,7 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
 
     testlist = []
     testlabels = []
+    testdict = {}
     with open(vallist_folder) as fp:
         for line in fp:
             fname, lbl = line.split()
@@ -27,8 +28,17 @@ def test_imagenet_zero(fc_file_pred, has_train=1):
             if not os.path.exists(feat_name):
                 print('not feature', feat_name)
                 continue
-            testlist.append(feat_name)
-            testlabels.append(int(lbl))
+            testdict.setdefault(int(lbl), []).append(feat_name)
+
+            # testlist.append(feat_name)
+            # testlabels.append(int(lbl))
+
+    keep_ratio = 0.2
+    for k,v in testdict:
+        random.shuffle(v)
+        keep_list = v[:int(len(v)*0.2)]
+        testlist += keep_list
+        testlabels += [k for i in range(len(keep_list))]
 
     with open(fc_file_pred, 'rb') as fp:
         fc_layers_pred = pkl.load(fp)
