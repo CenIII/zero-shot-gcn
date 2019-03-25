@@ -117,7 +117,6 @@ for epoch in range(FLAGS.epochs):
         filehandler = open(filename, 'wb')
         pkl.dump(outs, filehandler)
         filehandler.close()
-        break
 print("Optimization Finished!")
 
 sess.close()
